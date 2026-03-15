@@ -16,51 +16,34 @@ LearnStack is a high-performance, full-stack Learning Management System (LMS) de
 - Node.js (v18+)
 - MySQL Server
 
+## 🛠️ Quick Start (Monorepo)
+
+1. **Install all dependencies** (from the root):
+   ```bash
+   npm run install-all
+   ```
+
+2. **Start both Frontend & Backend**:
+   ```bash
+   npm run dev
+   ```
+   *Frontend: http://localhost:3000 | Backend: http://localhost:5000*
+
+---
+
 ## Step-by-Step Setup Instructions
 
 ### 1. Database Setup
-1. Ensure your MySQL server is running.
-2. The backend will automatically create the `lms_db` and tables when it starts. Alternatively, you can run the `backend/schema.sql` file manually.
-3. To seed initial data (Admin user, Student user, and demo subjects), import `backend/seed.sql` into your database.
-   - Run: `mysql -u root -p lms_db < seed.sql`
-   - *Demo Admin Login:* `admin@lms.com` / `password`
-   - *Demo Student Login:* `student@lms.com` / `password`
+1. Ensure your MySQL server (or SQLite for development) is running.
+2. The backend will automatically create the tables when it starts.
+3. Import initial demo data if needed using `backend/seed.sql`.
 
-### 2. Backend Setup
-1. Navigate to the backend directory:
-   ```bash
-   cd backend
-   ```
-2. Copy the example environment variables:
-   ```bash
-   cp .env.example .env
-   ```
-   *Edit `.env` if your MySQL password is not empty.*
-3. Install dependencies:
-   ```bash
-   npm install
-   ```
-4. Start the backend development server:
-   ```bash
-   npm run dev
-   ```
-   *The server runs on http://localhost:5000*
+### 2. Manual Setup (Alternative)
+If you prefer running them separately:
+- **Backend**: `npm run backend`
+- **Frontend**: `npm run frontend`
 
-### 3. Frontend Setup
-1. Open a new terminal and navigate to the frontend directory:
-   ```bash
-   cd frontend
-   ```
-2. Make sure dependencies are installed (they should already be there if you ran `npm install` initially).
-   ```bash
-   npm install
-   ```
-3. Start the Next.js development server:
-   ```bash
-   npm run dev
-   ```
-   *The app runs on http://localhost:3000*
-
+---
 ---
 
 ## Directory Structure
