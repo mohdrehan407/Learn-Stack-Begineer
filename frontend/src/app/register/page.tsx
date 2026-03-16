@@ -21,7 +21,9 @@ export default function Register() {
             alert('Registration successful, please login');
             router.push('/login');
         } catch (error: any) {
-            alert(error.response?.data?.message || 'Registration failed');
+            const errorMsg = error.response?.data?.error || error.response?.data?.message || 'Registration failed';
+            const hint = error.response?.data?.hint ? `\n\nHint: ${error.response.data.hint}` : '';
+            alert(`${errorMsg}${hint}`);
         } finally {
             setLoading(false);
         }

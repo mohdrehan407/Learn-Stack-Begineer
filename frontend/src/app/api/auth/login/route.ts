@@ -43,8 +43,16 @@ export async function POST(request: Request) {
             refreshToken,
             user: { id: user.id, name: user.name, email: user.email, role: user.role }
         });
-    } catch (error) {
+    } catch (error: any) {
         console.error('Login error:', error);
-        return NextResponse.json({ message: 'Error logging in', error: String(error) }, { status: 500 });
+        return NextResponse.json(
+            {
+                message: 'Error logging in',
+                error: error.message,
+                code: error.code,
+                hint: 'Missing database connection. Please set DB_HOST, DB_USER, DB_PASSWORD, and DB_NAME in Vercel Environment Variables.'
+            },
+            { status: 500 }
+        );
     }
 }

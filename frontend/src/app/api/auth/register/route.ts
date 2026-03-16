@@ -25,10 +25,15 @@ export async function POST(request: Request) {
             { message: 'User registered successfully', userId: result.insertId },
             { status: 201 }
         );
-    } catch (error) {
+    } catch (error: any) {
         console.error('Register error:', error);
         return NextResponse.json(
-            { message: 'Error registering user', error: String(error) },
+            {
+                message: 'Error registering user',
+                error: error.message,
+                code: error.code,
+                hint: 'Missing database connection. Please set DB_HOST, DB_USER, DB_PASSWORD, and DB_NAME in Vercel Environment Variables.'
+            },
             { status: 500 }
         );
     }

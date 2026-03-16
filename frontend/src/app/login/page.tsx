@@ -22,7 +22,9 @@ export default function Login() {
             login(data.user, data.accessToken, data.refreshToken);
             router.push(data.user.role === 'ADMIN' ? '/admin/dashboard' : '/dashboard');
         } catch (error: any) {
-            alert(error.response?.data?.message || 'Login failed');
+            const errorMsg = error.response?.data?.error || error.response?.data?.message || 'Login failed';
+            const hint = error.response?.data?.hint ? `\n\nHint: ${error.response.data.hint}` : '';
+            alert(`${errorMsg}${hint}`);
         } finally {
             setLoading(false);
         }
