@@ -1,13 +1,20 @@
 import mysql from 'mysql2/promise';
 
+// Vercel-compatible MySQL Connection configuration for Frontend API Routes
+// IMPORTANT: Use the EXTERNAL/PUBLIC hostname from Railway (e.g., xxx.railway.app),
+// NOT the .internal one, as Vercel is outside the Railway network.
 const pool = mysql.createPool({
-    host: process.env.DB_HOST || 'localhost',
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME || 'lms_db',
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
+    port: parseInt(process.env.DB_PORT || '3306'),
     waitForConnections: true,
     connectionLimit: 10,
-    queueLimit: 0
+    queueLimit: 0,
+    ssl: {
+        rejectUnauthorized: false
+    }
 });
 
 export const executeQuery = async (query: string, params: any[] = []): Promise<any> => {
@@ -23,8 +30,11 @@ export const executeQuery = async (query: string, params: any[] = []): Promise<a
             insertId: info.insertId,
             affectedRows: info.affectedRows
         };
-    } catch (error) {
-        console.error('Database Error:', error);
+    } catch (error: any) {
+        console.error('❌ Frontend DB Error:', {
+            message: error.message,
+            code: error.code
+        });
         throw error;
     }
 };
