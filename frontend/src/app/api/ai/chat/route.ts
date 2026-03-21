@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 
-export const runtime = 'edge'; // Zero cold-starts and low latency for AI responses
-
+// Standard runtime for maximum compatibility
 export async function POST(request: Request) {
     let query = '';
     let history: any[] = [];
@@ -9,77 +8,69 @@ export async function POST(request: Request) {
         const body = await request.json();
         query = body.query;
         history = body.history;
-        let API_KEY = process.env.HUGGINGFACE_API_KEY || "";
         
-        // Clean the API key in case the user accidentally pasted "Bearer " or has whitespace
-        let cleanApiKey = API_KEY.trim();
-        if (cleanApiKey.startsWith('Bearer ')) {
-            cleanApiKey = cleanApiKey.replace('Bearer ', '');
-        }
+        let API_KEY = process.env.HUGGINGFACE_API_KEY || "";
+        let cleanApiKey = API_KEY.trim().replace(/^Bearer\s+/i, '');
 
         if (!cleanApiKey) {
-            console.error('❌ HUGGINGFACE_API_KEY is missing in environment variables');
             return NextResponse.json({ 
-                response: "I'm currently missing my AI brain. Please set HUGGINGFACE_API_KEY in Vercel." 
-            }, { status: 200 }); // Keep 200 so the frontend can display the message properly
-        }
-
-        // Format history for Hugging Face Router
-        // Handle input history format if it differs
-        const formattedHistory = (history || []).map((msg: any) => ({
-            role: msg.role === 'assistant' || msg.role === 'ai' ? 'assistant' : 'user',
-            content: msg.content || msg.text
-        }));
-
-        const messages = [
-            { 
-                role: "system", 
-                content: "You are StackAI, a brilliant global tutor. Provide clear, accurate, and helpful educational answers. Use markdown formatting where appropriate." 
-            },
-            ...formattedHistory.slice(-5), // Keep only last few messages for context
-            { role: "user", content: query }
-        ];
-
-        console.log('🔄 StackAI calling Hugging Face Router...');
-
-        const hf_response = await fetch(
-            "https://router.huggingface.co/v1/chat/completions",
-            {
-                headers: { 
-                    "Authorization": `Bearer ${cleanApiKey}`,
-                    "Content-Type": "application/json"
-                },
-                method: "POST",
-                body: JSON.stringify({
-                    model: "meta-llama/Llama-3.1-8B-Instruct", // High-speed, high-quality model
-                    messages: messages,
-                    max_tokens: 400, // Reduced for faster delivery
-                    temperature: 0.7,
-                }),
-            }
-        );
-
-        if (!hf_response.ok) {
-            const errData = await hf_response.json();
-            console.error('❌ Hugging Face Error:', errData);
-            const errorMessage = errData.error?.message || errData.error || 'Unknown Error';
-            return NextResponse.json({ 
-                response: `[Hugging Face Error]: ${errorMessage}. Please check your API key and Vercel environment variables.` 
+                response: "HUGGINGFACE_API_KEY is missing. Please set it in Vercel settings." 
             });
         }
 
-        const result: any = await hf_response.json();
+        // Use the most stable Hugging Face endpoint
+        const modelId = "mistralai/Mistral-7B-Instruct-v0.3";
+        const endpoint = `https://api-inference.huggingface.co/models/${modelId}/v1/chat/completions`;
+
+        console.log(`🔄 StackAI calling stable endpoint: ${modelId}`);
+
+        const response = await fetch(endpoint, {
+            headers: { 
+                "Authorization": `Bearer ${cleanApiKey}`,
+                "Content-Type": "application/json"
+            },
+            method: "POST",
+            body: JSON.stringify({
+                model: modelId,
+                messages: [
+                    { role: "system", content: "You are StackAI, a helpful tutor. Give short, concise answers." },
+                    ...history.slice(-3).map((m: any) => ({
+                        role: m.role === 'assistant' || m.role === 'ai' ? 'assistant' : 'user',
+                        content: m.content || m.text
+                    })),
+                    { role: "user", content: query }
+                ],
+                max_tokens: 300,
+                temperature: 0.7,
+            }),
+        });
+
+        // Robust check for JSON response
+        const contentType = response.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+            const text = await response.text();
+            console.error('❌ Non-JSON Response:', text.substring(0, 200));
+            return NextResponse.json({ 
+                response: `[API Error]: Service returned non-JSON response. Status: ${response.status}. This usually means the API key is invalid or the service is down.` 
+            });
+        }
+
+        const result = await response.json();
         
-        if (result.choices && result.choices[0] && result.choices[0].message) {
+        if (result.choices && result.choices[0]?.message) {
             return NextResponse.json({ response: result.choices[0].message.content.trim() });
         }
         
+        if (result.error) {
+            return NextResponse.json({ response: `[AI Error]: ${result.error.message || result.error}` });
+        }
+
         throw new Error('Unexpected API response structure');
 
     } catch (error: any) {
-        console.error('❌ StackAI Error:', error);
+        console.error('❌ Critical AI Error:', error);
         return NextResponse.json({ 
-            response: `StackAI Connection Error: ${error.message}. Try disabling Edge Runtime if this persists, or verify the API key at Hugging Face.` 
+            response: `StackAI Connection Issue: ${error.message}. Please verify your Hugging Face API key is correct and not expired.` 
         });
     }
 }
