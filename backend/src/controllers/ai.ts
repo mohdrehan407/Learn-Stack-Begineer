@@ -25,7 +25,7 @@ export const getAIResponse = async (req: Request, res: Response) => {
                 },
                 method: "POST",
                 body: JSON.stringify({
-                    model: "Qwen/Qwen2.5-72B-Instruct",
+                    model: "meta-llama/Llama-3.1-8B-Instruct", // Switch to higher-performance model
                     messages: [
                         { 
                             role: "system", 
@@ -33,7 +33,7 @@ export const getAIResponse = async (req: Request, res: Response) => {
                         },
                         { role: "user", content: query }
                     ],
-                    max_tokens: 800,
+                    max_tokens: 400, // Reduced for speed
                     temperature: 0.7,
                 }),
             }

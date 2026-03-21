@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 
+export const runtime = 'edge'; // Zero cold-starts and low latency for AI responses
+
 export async function POST(request: Request) {
     let query = '';
     let history: any[] = [];
@@ -43,9 +45,9 @@ export async function POST(request: Request) {
                 },
                 method: "POST",
                 body: JSON.stringify({
-                    model: "Qwen/Qwen2.5-72B-Instruct",
+                    model: "meta-llama/Llama-3.1-8B-Instruct", // High-speed, high-quality model
                     messages: messages,
-                    max_tokens: 800,
+                    max_tokens: 400, // Reduced for faster delivery
                     temperature: 0.7,
                 }),
             }
